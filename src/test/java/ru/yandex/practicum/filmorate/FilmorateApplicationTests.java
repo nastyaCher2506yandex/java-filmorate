@@ -138,11 +138,8 @@ class FilmorateApplicationTests {
 		emptyName.setReleaseDate(LocalDate.of(2020, 1, 1));
 		emptyName.setDuration(120);
 
-		try {
-			Film result = filmService.create(emptyName);
-		} catch (ValidationException exception) {
-			assertEquals("Название фильма не должно быть пустым",exception.getMessage());
-		}
+		//проверяем, что ошибка поймана
+		assertThrows(ValidationException.class,() -> filmService.create(emptyName));
 
 		Film nameOnlySpace = new Film();
 		nameOnlySpace.setName("     ");
@@ -150,11 +147,8 @@ class FilmorateApplicationTests {
 		nameOnlySpace.setReleaseDate(LocalDate.of(2020, 1, 1));
 		nameOnlySpace.setDuration(120);
 
-		try {
-			Film result = filmService.create(nameOnlySpace);
-		} catch (ValidationException exception) {
-			assertEquals("Название фильма не должно быть пустым",exception.getMessage());
-		}
+		//проверяем, что ошибка поймана
+		assertThrows(ValidationException.class,() -> filmService.create(nameOnlySpace));
 	}
 
 	//проверяем длину описания
@@ -166,12 +160,11 @@ class FilmorateApplicationTests {
 		emptyDescription.setReleaseDate(LocalDate.of(2020, 1, 1));
 		emptyDescription.setDuration(120);
 
-		try {
+		//проверяем, что ошибка не была поймана
+		assertDoesNotThrow(() -> {
 			Film result = filmService.create(emptyDescription);
 			assertTrue(result.getDescription().isEmpty());
-		} catch (ValidationException exception) {
-			assertNotEquals("Название фильма не должно быть пустым",exception.getMessage());
-		}
+		});
 
 		//когда содержит количество символов диапозоне
 
@@ -181,13 +174,11 @@ class FilmorateApplicationTests {
 		descriptionCorrect.setReleaseDate(LocalDate.of(2020, 1, 1));
 		descriptionCorrect.setDuration(120);
 
-		try {
+		//проверяем, что ошибка не была поймана
+		assertDoesNotThrow(() -> {
 			Film result = filmService.create(descriptionCorrect);
 			assertEquals("Описание фильма длиной меньше 200 символов", result.getDescription());
-		} catch (ValidationException exception) {
-			//ошибка не должна вылетать
-			assertNotEquals("Превышена максимальная длина описания фильма (200 символов)",exception.getMessage());
-		}
+		});
 
 		//когда содержит ровно 200 символов
 		Film descriptionUnderMaxChar = new Film();
@@ -198,17 +189,13 @@ class FilmorateApplicationTests {
 		descriptionUnderMaxChar.setReleaseDate(LocalDate.of(2020, 1, 1));
 		descriptionUnderMaxChar.setDuration(120);
 
-		System.out.println(descriptionUnderMaxChar.getDescription());
-
 		assertEquals(200,descriptionUnderMaxChar.getDescription().length());
 
-		try {
+		//проверяем, что ошибка не была поймана
+		assertDoesNotThrow(() -> {
 			Film result = filmService.create(descriptionUnderMaxChar);
 			assertEquals(200, result.getDescription().length());
-		} catch (ValidationException exception) {
-			//ошибка не должна вылетать
-			assertNotEquals("Превышена максимальная длина описания фильма (200 символов)",exception.getMessage());
-		}
+		});
 
 		//когда содержит 201 символ
 		Film descriptionMoreOneChar = new Film();
@@ -221,11 +208,8 @@ class FilmorateApplicationTests {
 
 		assertEquals(201,descriptionMoreOneChar.getDescription().length());
 
-		try {
-			Film result = filmService.create(descriptionMoreOneChar);
-		} catch (ValidationException exception) {
-			assertEquals("Превышена максимальная длина описания фильма (200 символов)",exception.getMessage());
-		}
+		//проверяем, что ошибка была поймана
+		assertThrows(ValidationException.class,() -> filmService.create(descriptionMoreOneChar));
 
 		//когда содержит 250 символов
 		Film descriptionMore = new Film();
@@ -239,11 +223,9 @@ class FilmorateApplicationTests {
 
 		assertEquals(250,descriptionMore.getDescription().length());
 
-		try {
-			Film result = filmService.create(descriptionMore);
-		} catch (ValidationException exception) {
-			assertEquals("Превышена максимальная длина описания фильма (200 символов)",exception.getMessage());
-		}
+
+		//проверяем, что ошибка была поймана
+		assertThrows(ValidationException.class,() -> filmService.create(descriptionMore));
 	}
 
 	//проверяем дату реализации
@@ -255,11 +237,8 @@ class FilmorateApplicationTests {
 		filmWhenDataReleaseEmpty.setDescription("Описание фильма длиной меньше 200 символов");
 		filmWhenDataReleaseEmpty.setDuration(120);
 
-		try {
-			Film result = filmService.create(filmWhenDataReleaseEmpty);
-		} catch (ValidationException exception) {
-			assertEquals("Не указана дата релиза", exception.getMessage());
-		}
+		//проверяем, что ошибка была поймана
+		assertThrows(ValidationException.class,() -> filmService.create(filmWhenDataReleaseEmpty));
 
 		//когда дата позже 28 декабря 1895 года
 		Film filmWhenDataReleaseAfter = new Film();
@@ -268,15 +247,12 @@ class FilmorateApplicationTests {
 		filmWhenDataReleaseAfter.setReleaseDate(LocalDate.of(2020, 1, 1));
 		filmWhenDataReleaseAfter.setDuration(120);
 
-		try {
+		//проверяем, что ошибка не была поймана
+		assertDoesNotThrow(() -> {
 			Film result = filmService.create(filmWhenDataReleaseAfter);
-
 			assertEquals(LocalDate.of(2020, 1, 1),result.getReleaseDate());
-		} catch (ValidationException exception) {
-			//ошибка не должна вылетать
-			assertNotEquals("Фильм не должен быть раньше 28 декабря 1895 года",exception.getMessage());
-			assertNotEquals("Не указана дата релиза", exception.getMessage());
-		}
+		});
+
 		//когда ровно 28 декабря 1895 года
 		Film filmWhenDataReleaseNow = new Film();
 		filmWhenDataReleaseNow.setName("Test Name");
@@ -284,15 +260,12 @@ class FilmorateApplicationTests {
 		filmWhenDataReleaseNow.setReleaseDate(LocalDate.of(1895, 12, 28));
 		filmWhenDataReleaseNow.setDuration(120);
 
-		try {
+		//проверяем, что ошибка не была поймана
+		assertDoesNotThrow(() -> {
 			Film result = filmService.create(filmWhenDataReleaseNow);
 
 			assertEquals(LocalDate.of(1895, 12, 28),result.getReleaseDate());
-		} catch (ValidationException exception) {
-			//ошибка не должна вылетать
-			assertNotEquals("Фильм не должен быть раньше 28 декабря 1895 года",exception.getMessage());
-			assertNotEquals("Не указана дата релиза", exception.getMessage());
-		}
+		});
 
 		//когда раньше на один день
 		Film filmWhenDataReleaseBeforeOneDay = new Film();
@@ -301,11 +274,8 @@ class FilmorateApplicationTests {
 		filmWhenDataReleaseBeforeOneDay.setReleaseDate(LocalDate.of(1895, 12, 27));
 		filmWhenDataReleaseBeforeOneDay.setDuration(120);
 
-		try {
-			Film result = filmService.create(filmWhenDataReleaseBeforeOneDay);
-		} catch (ValidationException exception) {
-			assertEquals("Фильм не должен быть раньше 28 декабря 1895 года",exception.getMessage());
-		}
+		//проверяем, что ошибка была поймана
+		assertThrows(ValidationException.class,() -> filmService.create(filmWhenDataReleaseBeforeOneDay));
 
 		//когда намного раньше
 		Film filmWhenDataReleaseBeforeMore = new Film();
@@ -314,11 +284,8 @@ class FilmorateApplicationTests {
 		filmWhenDataReleaseBeforeMore.setReleaseDate(LocalDate.of(1800, 12, 27));
 		filmWhenDataReleaseBeforeMore.setDuration(120);
 
-		try {
-			Film result = filmService.create(filmWhenDataReleaseBeforeMore);
-		} catch (ValidationException exception) {
-			assertEquals("Фильм не должен быть раньше 28 декабря 1895 года",exception.getMessage());
-		}
+		//проверяем, что ошибка была поймана
+		assertThrows(ValidationException.class,() -> filmService.create(filmWhenDataReleaseBeforeMore));
 	}
 
 	//проверим продолжительность фильмов
@@ -330,11 +297,8 @@ class FilmorateApplicationTests {
 		filmWhenEmptyDuration.setDescription("Описание фильма длиной меньше 200 символов");
 		filmWhenEmptyDuration.setReleaseDate(LocalDate.of(2020, 1, 1));
 
-		try {
-			Film result = filmService.create(filmWhenEmptyDuration);
-		} catch (ValidationException exception) {
-			assertEquals("Не указана продолжительность фильма",exception.getMessage());
-		}
+		//проверяем, что ошибка была поймана
+		assertThrows(ValidationException.class,() -> filmService.create(filmWhenEmptyDuration));
 
 		//продолжительность правильная
 		Film filmWhenCorrectDuration = new Film();
@@ -343,15 +307,11 @@ class FilmorateApplicationTests {
 		filmWhenCorrectDuration.setReleaseDate(LocalDate.of(2020, 1, 1));
 		filmWhenCorrectDuration.setDuration(120);
 
-		try {
+		//проверяем, что ошибка не была поймана
+		assertDoesNotThrow(() -> {
 			Film result = filmService.create(filmWhenCorrectDuration);
-
 			assertEquals(120,result.getDuration());
-		} catch (ValidationException exception) {
-			//ошибка не должна вылетать
-			assertNotEquals("Продолжительность фильма должна быть положительным числом",exception.getMessage());
-			assertNotEquals("Не указана продолжительность фильма", exception.getMessage());
-		}
+		});
 
 		//когда равно нулю
 		Film filmWhenZeroDuration = new Film();
@@ -360,25 +320,18 @@ class FilmorateApplicationTests {
 		filmWhenZeroDuration.setReleaseDate(LocalDate.of(2020, 1, 1));
 		filmWhenZeroDuration.setDuration(0);
 
-		try {
-			Film result = filmService.create(filmWhenZeroDuration);
-		} catch (ValidationException exception) {
-			assertEquals("Продолжительность фильма должна быть положительным числом",exception.getMessage());
-		}
+		//проверяем, что ошибка была поймана
+		assertThrows(ValidationException.class,() -> filmService.create(filmWhenZeroDuration));
 
 		//когда продолжительность отрицательная
-		//когда равно нулю
 		Film filmWhenNegativeDuration = new Film();
 		filmWhenNegativeDuration.setName("Test Name");
 		filmWhenNegativeDuration.setDescription("Описание фильма длиной меньше 200 символов");
 		filmWhenNegativeDuration.setReleaseDate(LocalDate.of(2020, 1, 1));
 		filmWhenNegativeDuration.setDuration(-200);
 
-		try {
-			Film result = filmService.create(filmWhenNegativeDuration);
-		} catch (ValidationException exception) {
-			assertEquals("Продолжительность фильма должна быть положительным числом",exception.getMessage());
-		}
+		//проверяем, что ошибка была поймана
+		assertThrows(ValidationException.class,() -> filmService.create(filmWhenNegativeDuration));
 	}
 
 	//ПОЛЬЗОВАТЕЛИ
@@ -391,11 +344,9 @@ class FilmorateApplicationTests {
 		userEmptyEmail.setLogin("testlogin");
 		userEmptyEmail.setName("testname");
 
-		try {
-			User result = userService.create(userEmptyEmail);
-		} catch (ValidationException exception) {
-			assertEquals("Email пустой",exception.getMessage());
-		}
+		//проверяем, что ошибка была поймана
+		assertThrows(ValidationException.class,() -> userService.create(userEmptyEmail));
+
 		//когда нет символа @
 		User userWithoutCharEmail = new User();
 		userWithoutCharEmail.setBirthday(LocalDate.of(2020, 1, 1));
@@ -403,11 +354,8 @@ class FilmorateApplicationTests {
 		userWithoutCharEmail.setName("testname");
 		userWithoutCharEmail.setEmail("testmail.com");
 
-		try {
-			User result = userService.create(userWithoutCharEmail);
-		} catch (ValidationException exception) {
-			assertEquals("Email некорректный",exception.getMessage());
-		}
+		//проверяем, что ошибка была поймана
+		assertThrows(ValidationException.class,() -> userService.create(userWithoutCharEmail));
 
 		//правильная почта
 		User userCorrectEmail = new User();
@@ -416,16 +364,11 @@ class FilmorateApplicationTests {
 		userCorrectEmail.setName("testname");
 		userCorrectEmail.setEmail("test@mail.com");
 
-		try {
+		//проверяем, что ошибка не была поймана
+		assertDoesNotThrow(() -> {
 			User result = userService.create(userCorrectEmail);
-
 			assertEquals("test@mail.com",result.getEmail());
-		} catch (ValidationException exception) {
-			//ошибка не должна выпадать
-			assertNotEquals("Email некорректный",exception.getMessage());
-			assertNotEquals("Email пустой",exception.getMessage());
-		}
-
+		});
 
 		//когда такая почта уже существует
 		User userDuplicateEmail = new User();
@@ -434,17 +377,8 @@ class FilmorateApplicationTests {
 		userDuplicateEmail.setName("testname2");
 		userDuplicateEmail.setEmail("test@mail.com");
 
-		try {
-			User result = userService.create(userDuplicateEmail);
-
-			assertEquals("test@mail.com",result.getEmail());
-		} catch (ValidationException exception) {
-			//данная ошибка не должна выпадать
-			assertNotEquals("Email некорректный",exception.getMessage());
-			assertNotEquals("Email пустой",exception.getMessage());
-		} catch (DuplicatedDataException exception) {
-			assertEquals("Данный имейл уже используется",exception.getMessage());
-		}
+		//проверяем, что ошибка была поймана
+		assertThrows(DuplicatedDataException.class,() -> userService.create(userDuplicateEmail));
 	}
 
 	//проверяем логин
@@ -456,11 +390,8 @@ class FilmorateApplicationTests {
 		userEmptyLogin.setName("testname2");
 		userEmptyLogin.setEmail("test2@mail.com");
 
-		try {
-			User result = userService.create(userEmptyLogin);
-		} catch (ValidationException exception) {
-			assertEquals("логин пустой", exception.getMessage());
-		}
+		//проверяем, что ошибка была поймана
+		assertThrows(ValidationException.class,() -> userService.create(userEmptyLogin));
 
 		//когда логин содержит пробелы
 		User userWithSpaceLogin = new User();
@@ -469,11 +400,8 @@ class FilmorateApplicationTests {
 		userWithSpaceLogin.setName("testname2");
 		userWithSpaceLogin.setEmail("test2@mail.com");
 
-		try {
-			User result = userService.create(userWithSpaceLogin);
-		} catch (ValidationException exception) {
-			assertEquals("Логин не может содержать пробел", exception.getMessage());
-		}
+		//проверяем, что ошибка была поймана
+		assertThrows(ValidationException.class,() -> userService.create(userWithSpaceLogin));
 	}
 
 	//проверяем имя
@@ -485,28 +413,24 @@ class FilmorateApplicationTests {
 		userWithName.setLogin("testlogin");
 		userWithName.setName("testname");
 		userWithName.setEmail("test3@mail.com");
-		try {
-			User result = userService.create(userWithName);
 
+		//проверяем, что ошибка не была поймана
+		assertDoesNotThrow(() -> {
+			User result = userService.create(userWithName);
 			assertEquals("testname",result.getName());
-		} catch (ValidationException exception) {
-			//ошибка не должна выпадать
-			assertTrue(exception.getMessage().isEmpty());
-		}
+		});
 
 		//когда имя пользователя не передано
 		User userWithoutName = new User();
 		userWithoutName.setBirthday(LocalDate.of(2020, 1, 1));
 		userWithoutName.setLogin("testlogin");
 		userWithoutName.setEmail("test7@mail.com");
-		try {
-			User result = userService.create(userWithoutName);
 
+		//проверяем, что ошибка не была поймана
+		assertDoesNotThrow(() -> {
+			User result = userService.create(userWithoutName);
 			assertEquals("testlogin",result.getName());
-		} catch (ValidationException exception) {
-			//ошибка не должна выпадать
-			assertTrue(exception.getMessage().isEmpty());
-		}
+		});
 	}
 
 	//проверяем дату рождения пользователя
@@ -519,14 +443,11 @@ class FilmorateApplicationTests {
 		userCorrectBirthday.setName("testname");
 		userCorrectBirthday.setEmail("test56@mail.com");
 
-		try {
+		//проверяем, что ошибка не была поймана
+		assertDoesNotThrow(() -> {
 			User result = userService.create(userCorrectBirthday);
-
 			assertEquals(LocalDate.of(2020, 1, 1),result.getBirthday());
-		} catch (ValidationException exception) {
-			//ошибка не должна выпадать
-			assertTrue(exception.getMessage().isEmpty());
-		}
+		});
 
 		//когда день рождения на один день раньше будущего
 		User userCorrectBirthdayOneBefore = new User();
@@ -535,14 +456,11 @@ class FilmorateApplicationTests {
 		userCorrectBirthdayOneBefore.setName("testname");
 		userCorrectBirthdayOneBefore.setEmail("test4545@mail.com");
 
-		try {
+		//проверяем, что ошибка не была поймана
+		assertDoesNotThrow(() -> {
 			User result = userService.create(userCorrectBirthdayOneBefore);
-
 			assertEquals(LocalDate.now().minusDays(1),result.getBirthday());
-		} catch (ValidationException exception) {
-			//ошибка не должна выпадать
-			assertTrue(exception.getMessage().isEmpty());
-		}
+		});
 
 		//когда день рождения в текущем дне
 		//когда день рождения на один день раньше будущего
@@ -552,26 +470,20 @@ class FilmorateApplicationTests {
 		userCorrectBirthdayNow.setName("testname");
 		userCorrectBirthdayNow.setEmail("test454@mail.com");
 
-		try {
+		//проверяем, что ошибка не была поймана
+		assertDoesNotThrow(() -> {
 			User result = userService.create(userCorrectBirthdayNow);
-
 			assertEquals(LocalDate.now(),result.getBirthday());
-		} catch (ValidationException exception) {
-			//ошибка не должна выпадать
-			assertTrue(exception.getMessage().isEmpty());
-		}
+		});
 
 		//когда на один день позде будующего
 		User userCorrectBirthdayOneAfter = new User();
-		userCorrectBirthdayOneAfter.setBirthday(LocalDate.now().minusDays(1));
+		userCorrectBirthdayOneAfter.setBirthday(LocalDate.now().plusDays(1));
 		userCorrectBirthdayOneAfter.setLogin("testlogin");
 		userCorrectBirthdayOneAfter.setName("testname");
 		userCorrectBirthdayOneAfter.setEmail("test55456@mail.com");
 
-		try {
-			User result = userService.create(userCorrectBirthdayOneAfter);
-		} catch (ValidationException exception) {
-			assertEquals("День рождение не может быть в будующем", exception.getMessage());
-		}
+		//проверяем, что ошибка была поймана
+		assertThrows(ValidationException.class,() -> userService.create(userCorrectBirthdayOneAfter));
 	}
 }

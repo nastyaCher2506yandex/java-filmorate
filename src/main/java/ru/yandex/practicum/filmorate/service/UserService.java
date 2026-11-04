@@ -92,7 +92,8 @@ public class UserService {
 
             //если пользователь хочет помять почту
             if (newUser.getEmail() != null && !newUser.getEmail().isBlank()) {
-                if (users.containsValue(newUser)) {
+                if (users.containsValue(newUser)
+                        && (!oldUser.getId().equals(newUser.getId()))) {
                     log.warn("Отклонён запрос на обновление пользователя: email уже зарегистрирован — {}", newUser.getEmail());
                     throw new DuplicatedDataException("Данный имейл уже используется");
                 }
