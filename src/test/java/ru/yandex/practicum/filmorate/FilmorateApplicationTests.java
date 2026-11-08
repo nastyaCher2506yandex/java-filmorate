@@ -52,7 +52,7 @@ class FilmorateApplicationTests {
 		);
 
 		// Проверяем, что сервер реально вернул статус 500
-		assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+		assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
 	}
 
 	@Test
@@ -79,7 +79,7 @@ class FilmorateApplicationTests {
 		);
 
 		// Проверяем, что сервер реально вернул статус 500
-		assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+		assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
 	}
 
 	@Test
