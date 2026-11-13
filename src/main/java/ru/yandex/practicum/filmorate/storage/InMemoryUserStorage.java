@@ -6,18 +6,14 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class InMemoryUserStorage implements UserStorage {
 
     //хранилище для всех пользователей
-    private final Map<Long, User> users;
+    private final Map<Long, User> users = new HashMap<>();
 
     //переопределения метода, который возращает количество пользователей
     @Override

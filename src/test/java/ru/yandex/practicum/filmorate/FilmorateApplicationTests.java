@@ -43,7 +43,7 @@ class FilmorateApplicationTests {
 
 	//проверка контроллеров на пустые запросы и корректные запросы
 	@Test
-	void server_reacts_to_empty_request_with_500_film() {
+	void server_reacts_to_empty_request_with_400_film() {
 		// Отправляем пустой JSON {}
 		ResponseEntity<String> response = restTemplate.postForEntity(
 				"/films",
@@ -70,7 +70,7 @@ class FilmorateApplicationTests {
 	}
 
 	@Test
-	void server_reacts_to_empty_request_with_500_user() {
+	void server_reacts_to_empty_request_with_400_user() {
 		// Отправляем пустой JSON {}
 		ResponseEntity<String> response = restTemplate.postForEntity(
 				"/users",
@@ -107,7 +107,7 @@ class FilmorateApplicationTests {
 				String.class
 		);
 
-		// Проверяем, что сервер реально вернул статус 200
+		// Проверяем, что сервер реально вернул статус 400
 		assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
 
 		// Проверяем, что сервер реально вернул статус 400, так @Valid автоматически возращает

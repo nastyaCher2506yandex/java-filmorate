@@ -144,8 +144,8 @@ public class FilmService {
         }
 
         if (user.isEmpty()) {
-            log.warn("Отклонён запрос на добавления лайка: пользователь с id={} не найден",id);
-            throw new NotFoundException("Пользователь с id=" + id + " не найден");
+            log.warn("Отклонён запрос на добавления лайка: пользователь с id={} не найден",idUser);
+            throw new NotFoundException("Пользователь с id=" + idUser + " не найден");
         }
 
         log.info("Пользователь с id={} добавил лайк фильму с id={}", idUser, id);
@@ -165,8 +165,8 @@ public class FilmService {
         }
 
         if (user.isEmpty()) {
-            log.warn("Отклонён запрос на удаление лайка: пользователь с id={} не найден",id);
-            throw new NotFoundException("Пользователь с id=" + id + " не найден");
+            log.warn("Отклонён запрос на удаление лайка: пользователь с id={} не найден",idUser);
+            throw new NotFoundException("Пользователь с id=" + idUser + " не найден");
         }
 
         log.info("Пользователь с id={} удалил лайк у фильма с id={}", idUser, id);

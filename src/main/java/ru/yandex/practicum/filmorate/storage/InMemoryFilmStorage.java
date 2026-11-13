@@ -6,18 +6,14 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class InMemoryFilmStorage implements FilmStorage {
 
     //таблица данных всех фильмов
-    private final Map<Long, Film> films;
+    private final Map<Long, Film> films = new HashMap<>();
 
     //для сортировки фильмов по популярности
     private final Comparator<Film> filmLikesComparator = Comparator.comparingInt(film -> film.getLikes().size());
@@ -96,8 +92,8 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public Collection<Film> findPopularFilm(int size) {
         return films.values().stream()
-                .limit(size)
                 .sorted(filmLikesComparator.reversed())
+                .limit(size)
                 .toList();
     }
 
