@@ -13,6 +13,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
+
 import java.time.LocalDate;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -34,8 +35,6 @@ class FilmorateApplicationTests {
 	void contextLoads() {
 	}
 
-
-
 	@BeforeEach
 	void setUpSetting() {
 		headers = new HttpHeaders();
@@ -44,7 +43,7 @@ class FilmorateApplicationTests {
 
 	//проверка контроллеров на пустые запросы и корректные запросы
 	@Test
-	void server_reacts_to_empty_request_with_500_film() {
+	void server_reacts_to_empty_request_with_400_film() {
 		// Отправляем пустой JSON {}
 		ResponseEntity<String> response = restTemplate.postForEntity(
 				"/films",
@@ -53,7 +52,7 @@ class FilmorateApplicationTests {
 		);
 
 		// Проверяем, что сервер реально вернул статус 500
-		assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+		assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
 	}
 
 	@Test
@@ -71,7 +70,7 @@ class FilmorateApplicationTests {
 	}
 
 	@Test
-	void server_reacts_to_empty_request_with_500_user() {
+	void server_reacts_to_empty_request_with_400_user() {
 		// Отправляем пустой JSON {}
 		ResponseEntity<String> response = restTemplate.postForEntity(
 				"/users",
@@ -80,7 +79,7 @@ class FilmorateApplicationTests {
 		);
 
 		// Проверяем, что сервер реально вернул статус 500
-		assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+		assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
 	}
 
 	@Test
@@ -108,7 +107,7 @@ class FilmorateApplicationTests {
 				String.class
 		);
 
-		// Проверяем, что сервер реально вернул статус 200
+		// Проверяем, что сервер реально вернул статус 400
 		assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
 
 		// Проверяем, что сервер реально вернул статус 400, так @Valid автоматически возращает

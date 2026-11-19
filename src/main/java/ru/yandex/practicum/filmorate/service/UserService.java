@@ -1,33 +1,48 @@
 package ru.yandex.practicum.filmorate.service;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
-import java.util.Map;
+import java.util.Optional;
 
-@Slf4j
+/*данный класс описывает бизнес-логику:
+    1. Добавление пользователя в друзья (добавление у одного, добавляется другому)
+    2. Удаление пользователя из друзей
+    3. Вывод списка общих друзей
+    4. Добавить пользователя
+    5. Посмотреть всех пользователей
+    6. Обновить данные о пользователе
+ */
+
 @Service
-@RequiredArgsConstructor
+@Slf4j
 public class UserService {
 
-    //хранилище для всех пользователей
-    private final Map<Long, User> users;
+    //хранилище данных о пользователях и основая работа с ним
+    private final UserStorage userStorage;
+
+    @Autowired
+    public UserService(UserStorage userStorage) {
+        this.userStorage = userStorage;
+    }
 
     //получаем список все пользователей
     public Collection<User> findAll() {
-        log.info("Получение всех пользователей.  Всего: {}", users.size());
-        return users.values();
+        log.info("Получение всех пользователей.  Всего: {}", userStorage.sizeUser());
+        return userStorage.findAll();
     }
 
     //создаем нового пользователя
     public User create(User user) {
+        //проверяем пустой ли email
         if (user.getEmail() == null || user.getEmail().isBlank()) {
             log.warn("Отклонён запрос на создание пользователя: email пустой");
             throw new ValidationException("Email пустой");
@@ -37,12 +52,6 @@ public class UserService {
         if (!user.getEmail().contains("@")) {
             log.warn("Отклонён запрос на создание пользователя: некорретный email");
             throw new ValidationException("Email некорректный");
-        }
-
-        //проверяем, что пользователей с такой почтой нет
-        if (users.containsValue(user)) {
-            log.warn("Отклонён запрос на создание пользователя: email уже зарегистрирован — {}", user.getEmail());
-            throw new DuplicatedDataException("Данный имейл уже используется");
         }
 
         //проверяем, что логин не пустой
@@ -57,11 +66,6 @@ public class UserService {
             throw new ValidationException("Логин не может содержать пробел");
         }
 
-        //проверяем пустое ли имя, если да, передаем в него логин
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
-        }
-
         //проверяем, что день рождение не в будующем
         if (user.getBirthday() == null) {
             log.warn("Отклонён запрос на создание пользователя: день рождение не передан");
@@ -74,74 +78,144 @@ public class UserService {
             throw new ValidationException("День рождение не может быть в будующем");
         }
 
-        user.setId(getNextId());
-        users.put(user.getId(),user);
-        log.info("Создан пользовать с id={}",user.getId());
+        User result = userStorage.addUser(user);
 
-        return user;
+        log.info("Создан пользовать с id={}",result.getId());
+        return result;
     }
 
-    public User update(User newUser) {
-        if (newUser.getId() == null) {
+    //обновляем пользователя
+    public User update(User user) {
+        if (user.getId() == null) {
             log.warn("Отклонён запрос на обновление пользователя: не указан id пользователя");
             throw new ValidationException("Id должен быть указан");
         }
 
-        if (users.containsKey(newUser.getId())) {
-            User oldUser = users.get(newUser.getId());
-
-            //если пользователь хочет помять почту
-            if (newUser.getEmail() != null && !newUser.getEmail().isBlank()) {
-                if (users.containsValue(newUser)
-                        && (!oldUser.getId().equals(newUser.getId()))) {
-                    log.warn("Отклонён запрос на обновление пользователя: email уже зарегистрирован — {}", newUser.getEmail());
-                    throw new DuplicatedDataException("Данный имейл уже используется");
-                }
-
-                if (!newUser.getEmail().contains("@")) {
+        if (userStorage.containsUser(user.getId())) {
+            //если пользователь хочет поменять почту
+            if (user.getEmail() != null && !user.getEmail().isBlank()) {
+                //проверям корректная ли почта
+                if (!user.getEmail().contains("@")) {
                     log.warn("Отклонён запрос на обновление пользователя: email некорректный формат");
                     throw new ValidationException("Неправильно указан адресс электронной почты");
                 }
-
-                oldUser.setEmail(newUser.getEmail());
             }
 
-            if (newUser.getLogin() != null && !newUser.getLogin().isBlank()) {
-                if (newUser.getLogin().contains(" ")) {
+            //если пользователь хочет поменять логин
+            if (user.getLogin() != null && !user.getLogin().isBlank()) {
+                if (user.getLogin().contains(" ")) {
                     log.warn("Отклонён запрос на обновление пользователя: логин содержит пробелы");
                     throw new ValidationException("Логин не может содержать пробел");
                 }
-
-                oldUser.setLogin(newUser.getLogin());
             }
 
-            if (newUser.getBirthday() != null) {
-                if (newUser.getBirthday().isAfter(LocalDate.now())) {
+            //если пользователь хочет поменять почту
+            if (user.getBirthday() != null) {
+                if (user.getBirthday().isAfter(LocalDate.now())) {
                     log.warn("Отклонён запрос на обновление пользователя: день рождение указан в будующем");
                     throw new ValidationException("День рождение не может быть в будующем");
                 }
-
-                oldUser.setBirthday(newUser.getBirthday());
             }
 
-            if (newUser.getName() != null && !newUser.getName().isBlank()) {
-                oldUser.setName(newUser.getName());
-            }
+            User result = userStorage.updateUser(user);
 
-            log.info("Обновлен пользовать с id={}",oldUser.getId());
-            return oldUser;
+            log.info("Обновлен пользовать с id={}",result.getId());
+            return result;
         }
 
-        log.warn("Отклонён запрос на обновление пользователя: пользователь с id={} не найден",newUser.getId());
-        throw new NotFoundException("Пользователь с id=" + newUser.getId() + " не найден");
+        log.warn("Отклонён запрос на обновление пользователя: пользователь с id={} не найден",user.getId());
+        throw new NotFoundException("Пользователь с id=" + user.getId() + " не найден");
     }
 
-    private long getNextId() {
-        long currentMaxId = users.keySet()
-                .stream()
-                .mapToLong(id -> id)
-                .max()
-                .orElse(0);
-        return ++currentMaxId;
+    //метод добавляет пользователя в друзья
+    public User addFriends(long id, long idFriends) {
+        //проверяем, что не указаны два одинаковый id
+        if (id == idFriends) {
+            log.warn("Отклонён запрос на добавления в друзья: указан один id");
+            throw new DuplicatedDataException("Указаны для одинаковы id");
+        }
+
+        Optional<User> user = userStorage.findByIdUser(id);
+        Optional<User> userFriends = userStorage.findByIdUser(idFriends);
+
+        //проверка, что такие пользователи существуют
+        if (user.isEmpty()) {
+            log.warn("Отклонён запрос на добавления в друзья: пользователь с id={} не найден",id);
+            throw new NotFoundException("Пользователь с id=" + id + " не найден");
+        }
+        if (userFriends.isEmpty()) {
+            log.warn("Отклонён запрос на добавления в друзья: пользователь с id={} не найден",idFriends);
+            throw new NotFoundException("Пользователь с id=" + idFriends + " не найден");
+        }
+
+        //добавляем пользователей в друзья
+        userStorage.addFriend(user.get(), userFriends.get());
+        log.info("Пользователь с id={} добавлен в друзья пользователю с id={}",id,idFriends);
+        return user.get();
+    }
+
+    //метод удаляет пользователя из друзей
+    public User removeFriends(long id, long idFriends) {
+        //проверяем, что не указаны два одинаковый id
+        if (id == idFriends) {
+            throw new DuplicatedDataException("Указаны для одинаковы id");
+        }
+
+        Optional<User> user = userStorage.findByIdUser(id);
+        Optional<User> userFriends = userStorage.findByIdUser(idFriends);
+
+        //проверка, что такие пользователи существуют
+        if (user.isEmpty()) {
+            log.warn("Отклонён запрос на удаление из друзей: пользователь с id={} не найден",id);
+            throw new NotFoundException("Пользователь с id=" + id + " не найден");
+        }
+        if (userFriends.isEmpty()) {
+            log.warn("Отклонён запрос на удаление из друзей: пользователь с id={} не найден",idFriends);
+            throw new NotFoundException("Пользователь с id=" + idFriends + " не найден");
+        }
+
+        //удаляем из друзей
+        userStorage.removeFriend(user.get(), userFriends.get());
+
+        log.info("Пользователь с id={} удален из друзьей пользователя с id={}",id,userFriends);
+        return user.get();
+    }
+
+    //метод выводит список друзей пользователя
+    public Collection<User> findFriedsUser(long id) {
+        Optional<User> user = userStorage.findByIdUser(id);
+
+        //проверка, что такие пользователь существует
+        if (user.isEmpty()) {
+            log.warn("Отклонён запрос на получение списка друзей: пользователь с id={} не найден",id);
+            throw new NotFoundException("Пользователь с id=" + id + " не найден");
+        }
+
+        log.info("Вывод друзей пользователя");
+        return userStorage.findListFriendsUser(user.get());
+    }
+
+    //метод выводит общих друзей пользователя
+    public Collection<User> findCommonFriends(long id, long otherId) {
+        //проверяем, что не указаны два одинаковый id
+        if (id == otherId) {
+            throw new DuplicatedDataException("Указаны для одинаковы id");
+        }
+
+        Optional<User> user = userStorage.findByIdUser(id);
+        Optional<User> userOther = userStorage.findByIdUser(otherId);
+
+        //проверка, что такие пользователи существуют
+        if (user.isEmpty()) {
+            log.warn("Отклонён запрос на получение списка общих друзей: пользователь с id={} не найден",id);
+            throw new NotFoundException("Пользователь с id=" + id + " не найден");
+        }
+        if (userOther.isEmpty()) {
+            log.warn("Отклонён запрос на получение списка общих друзей: пользователь с id={} не найден",otherId);
+            throw new NotFoundException("Пользователь с id=" + otherId + " не найден");
+        }
+
+        log.info("Вывод общих друзей с пользователем");
+        return userStorage.findCommonFriends(user.get(), userOther.get());
     }
 }
