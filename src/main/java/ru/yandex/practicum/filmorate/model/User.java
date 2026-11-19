@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 // добавим проверку на пустые объекты
@@ -23,6 +24,8 @@ public class User {
     private String login;
     private String name;
     private LocalDate birthday;
+
+    private List<Boolean> statusFriendship;
 
     //содержит список id пользователей, которые являются друзьями
     private Set<Long> friends = new HashSet<>();
